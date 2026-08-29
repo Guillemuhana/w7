@@ -37,19 +37,19 @@ function NetworkMap({ nodes, selected }) {
     <svg viewBox="0 0 100 100" className="w7-map-svg">
       <defs>
         <radialGradient id="mapGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#0F9B8E" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#0F9B8E" stopOpacity="0" />
+          <stop offset="0%" stopColor="#17A5AE" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#17A5AE" stopOpacity="0" />
         </radialGradient>
       </defs>
       <circle cx="50" cy="50" r="46" fill="url(#mapGlow)" />
-      <circle cx="50" cy="50" r="4.5" fill="#14213D" />
-      <circle cx="50" cy="50" r="4.5" fill="none" stroke="#14213D" strokeWidth="1">
+      <circle cx="50" cy="50" r="4.5" fill="#0A2A5C" stroke="#fff" strokeWidth="1.5" />
+      <circle cx="50" cy="50" r="4.5" fill="none" stroke="#8FDCE2" strokeWidth="1">
         <animate attributeName="r" values="4.5;16;4.5" dur="2.8s" repeatCount="indefinite" />
         <animate attributeName="opacity" values="0.7;0;0.7" dur="2.8s" repeatCount="indefinite" />
       </circle>
       {nodes.map((n, i) => (
         <g key={n.id} transform={`translate(${positions[i].x} ${positions[i].y})`}>
-          <circle r={n.id === selected ? "6.5" : "5"} fill={n.id === selected ? "#0F9B8E" : "#7FE0D2"} stroke="#fff" strokeWidth="1.4" />
+          <circle r={n.id === selected ? "6.5" : "5"} fill={n.id === selected ? "#17A5AE" : "#8FDCE2"} stroke="#fff" strokeWidth="1.4" />
         </g>
       ))}
     </svg>

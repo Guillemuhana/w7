@@ -18,13 +18,40 @@ WhatsApp, validación por celular (OTP) y pantalla de conectado.
 ## Estructura
 
 ```
+public/
+  favicon.svg -> ícono de pestaña (marca W-7)
+  logo.svg    -> lockup completo, para compartir / redes
 src/
-  App.jsx     -> toda la lógica y estilos del portal cautivo
-  main.jsx    -> punto de entrada de React
+  App.jsx                    -> shell con las tres vistas
+  components/Brand.jsx       -> logo W-7 en SVG + colores de marca
+  components/CaptivePortal.jsx
+  components/HostDashboard.jsx
+  components/ClientDashboard.jsx
+  styles.css                 -> paleta y estilos
+  main.jsx                   -> punto de entrada de React
 index.html
 package.json
 vite.config.js
 ```
+
+## Marca
+
+El logo está dibujado como SVG en `src/components/Brand.jsx`, así que escala
+sin perder nitidez y toma los colores desde un solo lugar:
+
+| Color        | Hex       | Uso                                  |
+|--------------|-----------|--------------------------------------|
+| Navy         | `#123C7E` | Textos fuertes, botones secundarios  |
+| Turquesa     | `#17A5AE` | Acento, botón principal, gráficos    |
+| Turquesa cl. | `#2DBFC6` | Degradado del botón principal        |
+| Turquesa os. | `#0E8791` | Degradado del botón principal        |
+
+Todos están como variables CSS en `:root` dentro de `src/styles.css`.
+
+## Deploy
+
+El proyecto es una SPA de Vite: Vercel la detecta sola
+(`npm run build` -> carpeta `dist`), no hace falta configuración extra.
 
 ## Notas
 

@@ -7,10 +7,10 @@ function CommunityPanel() {
       <div className="w7-panel-eyebrow">Panel de publicidad y comunidad W-7</div>
       <div className="w7-panel-body">
         <svg width="58" height="58" viewBox="0 0 58 58" style={{ borderRadius: 12, flexShrink: 0 }}>
-          <rect width="58" height="58" rx="12" fill="#0F9B8E" />
-          <circle cx="20" cy="24" r="7" fill="#BFF3EA" />
-          <circle cx="34" cy="22" r="9" fill="#7FE0D2" />
-          <path d="M8 46c2-9 9-13 21-13s19 4 21 13" fill="#0B7A70" />
+          <rect width="58" height="58" rx="12" fill="#17A5AE" />
+          <circle cx="20" cy="24" r="7" fill="#CDEFF2" />
+          <circle cx="34" cy="22" r="9" fill="#8FDCE2" />
+          <path d="M8 46c2-9 9-13 21-13s19 4 21 13" fill="#0E8791" />
         </svg>
         <div>
           <div className="w7-panel-title">Visitá nuestra nueva plaza comunitaria</div>
@@ -72,9 +72,7 @@ function WelcomeScreen({ go }) {
       <div className="w7-content" style={{ justifyContent: "flex-start" }}>
         <div style={{ height: 18 }} />
         <div className="w7-brand-block">
-          <W7Logo pulsing size={56} />
-          <div style={{ height: 10 }} />
-          <Wordmark />
+          <Wordmark size={132} pulsing />
         </div>
         <p className="w7-welcome-text">¡Bienvenido a la red solidaria W-7!</p>
         <div className="w7-btn-stack">

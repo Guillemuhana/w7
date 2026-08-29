@@ -17,8 +17,8 @@ export default function App() {
     <div className="w7-app">
       <nav className="w7-topnav">
         <div className="w7-topnav-brand">
-          <W7Logo size={28} />
-          <span className="w7-topnav-title">W-7 · Demo</span>
+          <W7Logo size={26} />
+          <span className="w7-topnav-title">Demo interactiva</span>
         </div>
         <div className="w7-tabs">
           {TABS.map((t) => (

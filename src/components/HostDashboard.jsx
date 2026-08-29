@@ -28,10 +28,10 @@ function Gauge({ value, target }) {
   const targetPct = Math.min(target / 50, 1);
   return (
     <svg width="140" height="140" viewBox="0 0 140 140">
-      <circle cx="70" cy="70" r={r} fill="none" stroke="#2C3B5C" strokeWidth="12" />
+      <circle cx="70" cy="70" r={r} fill="none" stroke="#1B3F72" strokeWidth="12" />
       <circle
         cx="70" cy="70" r={r} fill="none"
-        stroke="#3A4E76" strokeWidth="12"
+        stroke="#2A5B9E" strokeWidth="12"
         strokeDasharray={`${c} ${c}`}
         strokeDashoffset={c - targetPct * c}
         strokeLinecap="round"
@@ -50,13 +50,13 @@ function Gauge({ value, target }) {
       <text x="70" y="64" textAnchor="middle" fontFamily="Sora, sans-serif" fontWeight="800" fontSize="26" fill="#fff">
         {value}%
       </text>
-      <text x="70" y="84" textAnchor="middle" fontFamily="Inter, sans-serif" fontSize="10.5" fill="#9FB0CC">
+      <text x="70" y="84" textAnchor="middle" fontFamily="Inter, sans-serif" fontSize="10.5" fill="#A9BEDC">
         objetivo {target}%
       </text>
       <defs>
         <linearGradient id="gaugeGrad" x1="0" y1="0" x2="140" y2="140">
-          <stop stopColor="#14B8A8" />
-          <stop offset="1" stopColor="#0B7A70" />
+          <stop stopColor="#2DBFC6" />
+          <stop offset="1" stopColor="#0E8791" />
         </linearGradient>
       </defs>
     </svg>
@@ -109,7 +109,7 @@ export default function HostDashboard() {
 
       <section className="w7-grid w7-grid-4">
         <StatCard label="Estado del nodo" accent={active ? "Compartiendo hace 42 días" : "Compartición pausada"}>
-          <div className="w7-status-value" style={{ color: active ? "#0B7A70" : "#B4302F" }}>
+          <div className="w7-status-value" style={{ color: active ? "#0E8791" : "#B4302F" }}>
             {active ? "● Activo" : "● Inactivo"}
           </div>
         </StatCard>
@@ -138,12 +138,12 @@ export default function HostDashboard() {
           </div>
           <div style={{ width: "100%", height: 200 }}>
             <ResponsiveContainer>
-              <BarChart data={HISTORY} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                <CartesianGrid vertical={false} stroke="#EEF1F5" />
-                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#8B94A3" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "#8B94A3" }} axisLine={false} tickLine={false} width={30} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "#ECF0F4" }} />
-                <Bar dataKey="monto" radius={[6, 6, 0, 0]} fill="#0F9B8E" maxBarSize={30} />
+              <BarChart data={HISTORY} margin={{ top: 8, right: 8, left: -6, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="#EDF1F7" />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#7C89A0" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#7C89A0" }} axisLine={false} tickLine={false} width={36} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "#E9EFF6" }} />
+                <Bar dataKey="monto" radius={[6, 6, 0, 0]} fill="#17A5AE" maxBarSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </div>
