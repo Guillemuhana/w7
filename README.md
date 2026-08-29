@@ -53,9 +53,32 @@ Todos están como variables CSS en `:root` dentro de `src/styles.css`.
 El proyecto es una SPA de Vite: Vercel la detecta sola
 (`npm run build` -> carpeta `dist`), no hace falta configuración extra.
 
+## Qué es real y qué está simulado
+
+| | Estado |
+|---|---|
+| Geolocalización del dispositivo | **Real** (Geolocation API, con permiso) |
+| Mapa y calles | **Real** (MapLibre GL + OpenFreeMap) |
+| Distancia a cada nodo | **Real** (haversine sobre tu posición) |
+| Estado de conexión y latencia | **Real** (sonda propia + Network Information API) |
+| Nodos, saldo, paquetes, historial, OTP | Simulados |
+
+Los nodos se ubican en relación a donde estés, así que la demo funciona en
+cualquier ciudad.
+
+## Conectar el backend (Supabase)
+
+Toda la capa de datos está aislada en `src/lib/demoBackend.js`. Hoy devuelve
+datos simulados con una demora artificial; para pasar a Supabase se reemplaza
+el cuerpo de cada función manteniendo la misma firma, sin tocar los
+componentes. El archivo incluye el ejemplo de la consulta equivalente.
+
+Cuando llegue ese momento harán falta dos variables de entorno en Vercel:
+`VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+
 ## Notas
 
 - Requiere tener Node.js instalado (18+).
-- Es solo la capa visual/de interacción: los códigos OTP, el estado
-  "conectado" y las estadísticas son simulados en el front. Falta
-  conectar con el backend real (Auth/OTP, Bandwidth Manager, etc.).
+- La geolocalización sólo funciona en HTTPS o `localhost`; en Vercel está
+  cubierto. Si el usuario no da permiso, la demo cae en una zona de ejemplo.
+- El mapa no necesita API key: OpenFreeMap es gratuito y sin límite de uso.

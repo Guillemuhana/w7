@@ -448,3 +448,168 @@ input:focus-visible, .w7-node-card:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .w7-ring, .w7-loadbar-fill { animation: none; }
 }
+
+/* ================= Conexión real / geolocalización ================= */
+
+.w7-header-aside { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.w7-conexion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 7px 12px;
+}
+.w7-conexion.is-offline { border-color: #F0C9C9; background: var(--danger-bg); }
+.w7-conexion-texto { display: flex; flex-direction: column; line-height: 1.25; }
+.w7-conexion-estado { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+.w7-conexion.is-offline .w7-conexion-estado { color: var(--danger); }
+.w7-conexion-detalle { font-size: 10.5px; color: var(--mist); }
+
+.w7-aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #FFF6E2;
+  border: 1px solid #F2DFB4;
+  color: #7A5A12;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.w7-aviso.is-cargando {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--navy);
+}
+
+/* ---------- Mapa ---------- */
+
+.w7-card-mapa { display: flex; flex-direction: column; }
+.w7-mapa {
+  position: relative;
+  flex: 1;
+  min-height: 260px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #DCE4EE;
+}
+/* Sube la especificidad a propósito: el CSS de MapLibre se carga después
+   (va en el chunk lazy) y su `.maplibregl-map { position: relative }`
+   pisaría este `absolute`, dejando el contenedor con altura 0. */
+.w7-mapa .w7-mapa-lienzo { position: absolute; inset: 0; }
+.w7-mapa-precision {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  background: rgba(255,255,255,0.92);
+  color: var(--navy);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+.w7-mapa .maplibregl-ctrl-attrib { font-size: 10px; }
+
+/* marcador del usuario */
+.w7-marker-yo { position: relative; width: 20px; height: 20px; }
+.w7-marker-punto {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--navy);
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(10,26,54,0.45);
+}
+.w7-marker-pulso {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(23,165,174,0.45);
+  animation: w7ping 2.4s ease-out infinite;
+}
+@keyframes w7ping {
+  0%   { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* marcadores de nodo */
+.w7-marker-nodo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 0 0 4px;
+  cursor: pointer;
+}
+.w7-marker-nodo-punto {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #8FDCE2;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 6px rgba(10,26,54,0.35);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.w7-marker-nodo-alias {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--navy);
+  background: rgba(255,255,255,0.92);
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.w7-marker-nodo:hover .w7-marker-nodo-punto { transform: scale(1.15); }
+.w7-marker-nodo.is-selected .w7-marker-nodo-punto {
+  background: var(--teal);
+  transform: scale(1.3);
+}
+
+/* ---------- Skeletons ---------- */
+
+.w7-skeleton {
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--panel) 25%, #F3F6FA 37%, var(--panel) 63%);
+  background-size: 400% 100%;
+  animation: w7shimmer 1.3s ease-in-out infinite;
+}
+.w7-skeleton-node { height: 58px; }
+.w7-skeleton-mapa { flex: 1; min-height: 260px; border-radius: 14px; }
+@keyframes w7shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .w7-skeleton, .w7-marker-pulso { animation: none; }
+}
+
+.w7-connecting-meta {
+  margin-top: 14px;
+  font-size: 11.5px;
+  color: var(--mist);
+  text-align: center;
+}
+.w7-signal.is-offline { color: var(--danger); }
+
+.w7-mapa-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  background: var(--panel);
+  color: var(--navy);
+  font-size: 12.5px;
+  font-weight: 600;
+}

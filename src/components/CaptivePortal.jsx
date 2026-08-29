@@ -1,5 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { W7Logo, Wordmark } from "./Brand.jsx";
+import { BarrasSeñal } from "./Conexion.jsx";
+import { useConexion } from "../hooks/useConexion.js";
+
+// La señal que muestra el portal es la conexión real del dispositivo.
+const ConexionCtx = createContext(null);
 
 function CommunityPanel() {
   return (
@@ -21,27 +26,28 @@ function CommunityPanel() {
   );
 }
 
-function PortalFooter({ signal = "Excelente" }) {
+function PortalFooter() {
+  const conexion = useContext(ConexionCtx);
   return (
     <div className="w7-footer">
       <button className="w7-link">Términos y Condiciones</button>
-      <div className="w7-signal">
-        <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-          <rect x="0" y="8" width="3" height="4" rx="1" fill="#22C55E" />
-          <rect x="4.5" y="5" width="3" height="7" rx="1" fill="#22C55E" />
-          <rect x="9" y="2.5" width="3" height="9.5" rx="1" fill="#22C55E" />
-          <rect x="13" y="0" width="3" height="12" rx="1" fill="#22C55E" />
-        </svg>
-        <span>Señal: {signal}</span>
+      <div className={`w7-signal ${conexion.online ? "" : "is-offline"}`}>
+        <BarrasSeñal nivel={conexion.calidad.nivel} etiqueta={conexion.calidad.etiqueta} />
+        <span>Señal: {conexion.calidad.etiqueta}</span>
       </div>
     </div>
   );
 }
 
 function StatusBar() {
+  const [hora, setHora] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setHora(new Date()), 30000);
+    return () => clearInterval(t);
+  }, []);
   return (
     <div className="w7-statusbar">
-      <span>11:24</span>
+      <span>{hora.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
       <div className="w7-notch" />
       <span className="w7-statusbar-icons">••• 📶 🔋</span>
     </div>
@@ -149,6 +155,7 @@ function OtpScreen({ title, phone, onBack, onVerified }) {
 }
 
 function ConnectingScreen({ onDone }) {
+  const conexion = useContext(ConexionCtx);
   useEffect(() => {
     const t = setTimeout(onDone, 1400);
     return () => clearTimeout(t);
@@ -159,6 +166,11 @@ function ConnectingScreen({ onDone }) {
         <W7Logo pulsing size={64} />
         <p className="w7-connecting-text">Conectando a la red W-7…</p>
         <div className="w7-loadbar"><div className="w7-loadbar-fill" /></div>
+        <p className="w7-connecting-meta">
+          {conexion.latenciaMs != null
+            ? `Latencia medida: ${conexion.latenciaMs} ms · ${conexion.calidad.etiqueta}`
+            : "Midiendo la calidad del enlace…"}
+        </p>
       </div>
       <PortalFooter />
     </div>
@@ -197,6 +209,7 @@ function ConnectedScreen({ onDisconnect }) {
 }
 
 export default function CaptivePortal() {
+  const conexion = useConexion();
   const [screen, setScreen] = useState("welcome");
   const [phone, setPhone] = useState("");
   const go = (next) => setScreen(next);
@@ -230,11 +243,13 @@ export default function CaptivePortal() {
   }
 
   return (
-    <div className="w7-stage">
-      <div className="w7-phone">
-        <StatusBar />
-        {body}
+    <ConexionCtx.Provider value={conexion}>
+      <div className="w7-stage">
+        <div className="w7-phone">
+          <StatusBar />
+          {body}
+        </div>
       </div>
-    </div>
+    </ConexionCtx.Provider>
   );
 }

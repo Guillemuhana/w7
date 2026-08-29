@@ -1,64 +1,52 @@
-import { useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { W7Logo } from "./Brand.jsx";
+import { BarrasSeñal, ChipConexion, AvisoUbicacion } from "./Conexion.jsx";
+import { useGeolocalizacion } from "../hooks/useGeolocalizacion.js";
+import { useConexion } from "../hooks/useConexion.js";
+import { buscarNodosCercanos, obtenerCuenta, obtenerHistorialConexiones, PAQUETES } from "../lib/demoBackend.js";
+import { formatearDistancia } from "../lib/geo.js";
 
-const NODES = [
-  { id: "A1043", alias: "Nueva Córdoba Centro", distancia: "40 m", señal: 5, precio: "USD 0,60 / 500MB" },
-  { id: "B2210", alias: "Plaza San Martín", distancia: "180 m", señal: 4, precio: "USD 0,60 / 500MB" },
-  { id: "C0871", alias: "Alto Alberdi Norte", distancia: "310 m", señal: 3, precio: "USD 0,50 / 500MB" },
-];
+// MapLibre pesa bastante: se carga recién cuando hace falta.
+const MapaRed = lazy(() => import("./MapaRed.jsx"));
 
-const PACKAGES = [
-  { id: "s", nombre: "500 MB", precio: "USD 0,60", detalle: "Ideal para mensajería y redes" },
-  { id: "m", nombre: "1 GB", precio: "USD 1,00", detalle: "Navegación + streaming liviano", featured: true },
-  { id: "l", nombre: "3 GB", precio: "USD 2,50", detalle: "Uso intensivo del día" },
-];
-
-const HISTORY = [
-  { fecha: "27 ago", nodo: "Nueva Córdoba Centro", mb: 420, costo: "USD 0,50" },
-  { fecha: "24 ago", nodo: "Plaza San Martín", mb: 890, costo: "USD 1,00" },
-  { fecha: "19 ago", nodo: "Nueva Córdoba Centro", mb: 310, costo: "USD 0,40" },
-];
-
-function SignalBars({ level }) {
-  return (
-    <div className="w7-minibars" aria-label={`Señal ${level} de 5`}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} className={i <= level ? "on" : ""} style={{ height: 4 + i * 3 }} />
-      ))}
-    </div>
-  );
-}
-
-function NetworkMap({ nodes, selected }) {
-  const positions = [
-    { x: 62, y: 40 }, { x: 22, y: 68 }, { x: 82, y: 74 },
-  ];
-  return (
-    <svg viewBox="0 0 100 100" className="w7-map-svg">
-      <defs>
-        <radialGradient id="mapGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#17A5AE" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#17A5AE" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <circle cx="50" cy="50" r="46" fill="url(#mapGlow)" />
-      <circle cx="50" cy="50" r="4.5" fill="#0A2A5C" stroke="#fff" strokeWidth="1.5" />
-      <circle cx="50" cy="50" r="4.5" fill="none" stroke="#8FDCE2" strokeWidth="1">
-        <animate attributeName="r" values="4.5;16;4.5" dur="2.8s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.7;0;0.7" dur="2.8s" repeatCount="indefinite" />
-      </circle>
-      {nodes.map((n, i) => (
-        <g key={n.id} transform={`translate(${positions[i].x} ${positions[i].y})`}>
-          <circle r={n.id === selected ? "6.5" : "5"} fill={n.id === selected ? "#17A5AE" : "#8FDCE2"} stroke="#fff" strokeWidth="1.4" />
-        </g>
-      ))}
-    </svg>
-  );
-}
+const RADIO_BUSQUEDA_M = 600;
 
 export default function ClientDashboard() {
-  const [balance] = useState(3.4);
-  const [selected, setSelected] = useState(NODES[0].id);
+  const geo = useGeolocalizacion();
+  const conexion = useConexion();
+
+  const [cuenta, setCuenta] = useState(null);
+  const [nodos, setNodos] = useState([]);
+  const [cargandoNodos, setCargandoNodos] = useState(true);
+  const [seleccionado, setSeleccionado] = useState(null);
+  const [historial, setHistorial] = useState([]);
+
+  useEffect(() => {
+    let activo = true;
+    obtenerCuenta().then((c) => activo && setCuenta(c));
+    obtenerHistorialConexiones().then((h) => activo && setHistorial(h));
+    return () => { activo = false; };
+  }, []);
+
+  // Los nodos dependen de dónde esté el usuario.
+  useEffect(() => {
+    if (!geo.coords) return;
+    let activo = true;
+    setCargandoNodos(true);
+    buscarNodosCercanos({ ...geo.coords, radioMetros: RADIO_BUSQUEDA_M }).then((res) => {
+      if (!activo) return;
+      setNodos(res);
+      setSeleccionado((actual) => (res.some((n) => n.id === actual) ? actual : res[0]?.id ?? null));
+      setCargandoNodos(false);
+    });
+    return () => { activo = false; };
+    // sólo re-consultamos si el usuario se movió de verdad
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.coords?.lat?.toFixed(4), geo.coords?.lng?.toFixed(4)]);
+
+  const subtitulo = geo.esReal
+    ? `Ubicación detectada · ${geo.coords.lat.toFixed(4)}, ${geo.coords.lng.toFixed(4)}`
+    : "Ubicación de ejemplo";
 
   return (
     <div className="w7-page">
@@ -67,49 +55,86 @@ export default function ClientDashboard() {
           <W7Logo size={34} />
           <div>
             <h1 className="w7-page-title">Explorar redes W-7</h1>
-            <span className="w7-page-sub">Nueva Córdoba, Córdoba</span>
+            <span className="w7-page-sub">{subtitulo}</span>
           </div>
         </div>
-        <div className="w7-balance-chip">
-          <span className="w7-balance-label">Saldo</span>
-          <span className="w7-balance-value">USD {balance.toFixed(2)}</span>
+        <div className="w7-header-aside">
+          <ChipConexion conexion={conexion} detallado />
+          <div className="w7-balance-chip">
+            <span className="w7-balance-label">Saldo</span>
+            <span className="w7-balance-value">
+              {cuenta ? `USD ${cuenta.saldoUSD.toFixed(2)}` : "—"}
+            </span>
+          </div>
         </div>
       </header>
+
+      <AvisoUbicacion geo={geo} />
 
       <section className="w7-grid w7-grid-split">
         <div className="w7-card">
           <div className="w7-card-header">
             <h2>Redes cercanas</h2>
-            <span className="w7-card-sub">3 nodos disponibles a menos de 400 m</span>
+            <span className="w7-card-sub">
+              {cargandoNodos
+                ? "Buscando nodos alrededor tuyo…"
+                : `${nodos.length} ${nodos.length === 1 ? "nodo disponible" : "nodos disponibles"} a menos de ${RADIO_BUSQUEDA_M} m`}
+            </span>
           </div>
+
           <div className="w7-node-list">
-            {NODES.map((n) => (
-              <button
-                key={n.id}
-                className={`w7-node-card ${selected === n.id ? "is-selected" : ""}`}
-                onClick={() => setSelected(n.id)}
-              >
-                <div className="w7-node-main">
-                  <span className="w7-node-alias">{n.alias}</span>
-                  <span className="w7-node-meta">{n.distancia} · {n.precio}</span>
-                </div>
-                <SignalBars level={n.señal} />
-              </button>
-            ))}
+            {cargandoNodos
+              ? [0, 1, 2].map((i) => <div key={i} className="w7-skeleton w7-skeleton-node" />)
+              : nodos.map((n) => (
+                  <button
+                    key={n.id}
+                    className={`w7-node-card ${seleccionado === n.id ? "is-selected" : ""}`}
+                    onClick={() => setSeleccionado(n.id)}
+                  >
+                    <div className="w7-node-main">
+                      <span className="w7-node-alias">{n.alias}</span>
+                      <span className="w7-node-meta">
+                        {formatearDistancia(n.distancia)} · {n.precioTexto}
+                      </span>
+                    </div>
+                    <BarrasSeñal nivel={n.señal} />
+                  </button>
+                ))}
           </div>
-          <button className="w7-btn w7-btn-primary" style={{ width: "100%", marginTop: 14 }}>
-            Conectarme al nodo seleccionado
+
+          <button
+            className="w7-btn w7-btn-primary"
+            style={{ width: "100%", marginTop: 14 }}
+            disabled={!seleccionado || !conexion.online}
+          >
+            {conexion.online ? "Conectarme al nodo seleccionado" : "Sin conexión"}
           </button>
         </div>
 
-        <div className="w7-card w7-card-dark">
+        <div className="w7-card w7-card-dark w7-card-mapa">
           <div className="w7-card-header w7-card-header-dark">
             <h2>Vista de red</h2>
-            <span className="w7-card-sub w7-card-sub-dark">Ilustrativa · no geolocaliza en esta demo</span>
+            <span className="w7-card-sub w7-card-sub-dark">
+              {geo.esReal ? "Geolocalización real del dispositivo" : "Zona de ejemplo · sin permiso de ubicación"}
+            </span>
           </div>
-          <NetworkMap nodes={NODES} selected={selected} />
+
+          {geo.coords ? (
+            <Suspense fallback={<div className="w7-skeleton w7-skeleton-mapa" />}>
+              <MapaRed
+                centro={geo.coords}
+                nodos={nodos}
+                seleccionado={seleccionado}
+                onSeleccionar={setSeleccionado}
+                precision={geo.esReal ? geo.precision : null}
+              />
+            </Suspense>
+          ) : (
+            <div className="w7-skeleton w7-skeleton-mapa" />
+          )}
+
           <p className="w7-dark-note" style={{ textAlign: "center" }}>
-            El punto central sos vos. Los puntos claros son nodos W-7 activos cerca tuyo.
+            El punto azul sos vos. Tocá un nodo para ver su área de cobertura.
           </p>
         </div>
       </section>
@@ -120,13 +145,16 @@ export default function ClientDashboard() {
           <span className="w7-card-sub">Se descuentan de tu saldo al conectarte</span>
         </div>
         <div className="w7-pricing-row">
-          {PACKAGES.map((p) => (
+          {PAQUETES.map((p) => (
             <div key={p.id} className={`w7-pricing-card ${p.featured ? "is-featured" : ""}`}>
               {p.featured && <span className="w7-pricing-tag">Más elegido</span>}
               <div className="w7-pricing-name">{p.nombre}</div>
               <div className="w7-pricing-price">{p.precio}</div>
               <div className="w7-pricing-detail">{p.detalle}</div>
-              <button className={`w7-btn ${p.featured ? "w7-btn-primary" : "w7-btn-secondary"}`} style={{ width: "100%", marginTop: 12 }}>
+              <button
+                className={`w7-btn ${p.featured ? "w7-btn-primary" : "w7-btn-secondary"}`}
+                style={{ width: "100%", marginTop: 12 }}
+              >
                 Comprar
               </button>
             </div>
@@ -144,7 +172,7 @@ export default function ClientDashboard() {
             <tr><th>Fecha</th><th>Nodo</th><th>Consumo</th><th>Costo</th></tr>
           </thead>
           <tbody>
-            {HISTORY.map((h, i) => (
+            {historial.map((h, i) => (
               <tr key={i}>
                 <td>{h.fecha}</td>
                 <td>{h.nodo}</td>
