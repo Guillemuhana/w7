@@ -29,28 +29,15 @@ function CommunityPanel() {
 function PortalFooter() {
   const conexion = useContext(ConexionCtx);
   return (
-    <div className="w7-footer">
-      <button className="w7-link">Términos y Condiciones</button>
-      <div className={`w7-signal ${conexion.online ? "" : "is-offline"}`}>
-        <BarrasSeñal nivel={conexion.calidad.nivel} etiqueta={conexion.calidad.etiqueta} />
-        <span>Señal: {conexion.calidad.etiqueta}</span>
+    <footer className="w7-footer">
+      <div className="w7-footer-inner">
+        <button className="w7-link">Términos y Condiciones</button>
+        <div className={`w7-signal ${conexion.online ? "" : "is-offline"}`}>
+          <BarrasSeñal nivel={conexion.calidad.nivel} etiqueta={conexion.calidad.etiqueta} />
+          <span>Señal: {conexion.calidad.etiqueta}</span>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function StatusBar() {
-  const [hora, setHora] = useState(() => new Date());
-  useEffect(() => {
-    const t = setInterval(() => setHora(new Date()), 30000);
-    return () => clearInterval(t);
-  }, []);
-  return (
-    <div className="w7-statusbar">
-      <span>{hora.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
-      <div className="w7-notch" />
-      <span className="w7-statusbar-icons">••• 📶 🔋</span>
-    </div>
+    </footer>
   );
 }
 
@@ -59,7 +46,6 @@ function ScreenHeader({ title, onBack }) {
     <div className="w7-screen-header">
       <button className="w7-back" onClick={onBack} aria-label="Volver">‹</button>
       <span>{title}</span>
-      <span style={{ width: 28 }} />
     </div>
   );
 }
@@ -75,8 +61,7 @@ function Btn({ variant = "primary", children, ...props }) {
 function WelcomeScreen({ go }) {
   return (
     <div className="w7-screen">
-      <div className="w7-content" style={{ justifyContent: "flex-start" }}>
-        <div style={{ height: 18 }} />
+      <div className="w7-content">
         <div className="w7-brand-block">
           <Wordmark size={132} pulsing />
         </div>
@@ -88,7 +73,6 @@ function WelcomeScreen({ go }) {
         </div>
         <CommunityPanel />
       </div>
-      <PortalFooter />
     </div>
   );
 }
@@ -100,8 +84,7 @@ function PhoneEntryScreen({ title, buttonLabel, hint, onBack, onSubmit }) {
     <div className="w7-screen">
       <ScreenHeader title={title} onBack={onBack} />
       <div className="w7-content">
-        <div style={{ height: 8 }} />
-        <W7Logo size={40} />
+        <W7Logo size={52} />
         <p className="w7-step-copy">{hint}</p>
         <label className="w7-field">
           <span className="w7-field-label">Número de celular</span>
@@ -114,7 +97,6 @@ function PhoneEntryScreen({ title, buttonLabel, hint, onBack, onSubmit }) {
           <Btn variant="primary" disabled={!valid} onClick={() => onSubmit(phone)}>{buttonLabel}</Btn>
         </div>
       </div>
-      <PortalFooter />
     </div>
   );
 }
@@ -134,8 +116,7 @@ function OtpScreen({ title, phone, onBack, onVerified }) {
     <div className="w7-screen">
       <ScreenHeader title={title} onBack={onBack} />
       <div className="w7-content">
-        <div style={{ height: 8 }} />
-        <W7Logo size={40} />
+        <W7Logo size={52} />
         <p className="w7-step-copy">
           Ingresá el código de 4 dígitos que enviamos a <strong>+54 {phone || "351 123 4567"}</strong>
         </p>
@@ -149,7 +130,6 @@ function OtpScreen({ title, phone, onBack, onVerified }) {
           <Btn variant="primary" disabled={!complete} onClick={onVerified}>Validar</Btn>
         </div>
       </div>
-      <PortalFooter />
     </div>
   );
 }
@@ -162,7 +142,7 @@ function ConnectingScreen({ onDone }) {
   }, [onDone]);
   return (
     <div className="w7-screen">
-      <div className="w7-content" style={{ justifyContent: "center", alignItems: "center" }}>
+      <div className="w7-content" style={{ alignItems: "center" }}>
         <W7Logo pulsing size={64} />
         <p className="w7-connecting-text">Conectando a la red W-7…</p>
         <div className="w7-loadbar"><div className="w7-loadbar-fill" /></div>
@@ -172,7 +152,6 @@ function ConnectingScreen({ onDone }) {
             : "Midiendo la calidad del enlace…"}
         </p>
       </div>
-      <PortalFooter />
     </div>
   );
 }
@@ -180,10 +159,9 @@ function ConnectingScreen({ onDone }) {
 function ConnectedScreen({ onDisconnect }) {
   return (
     <div className="w7-screen">
-      <div className="w7-content" style={{ justifyContent: "flex-start" }}>
-        <div style={{ height: 18 }} />
+      <div className="w7-content">
         <div className="w7-brand-block">
-          <W7Logo size={48} />
+          <W7Logo size={60} />
           <div style={{ height: 10 }} />
           <div className="w7-connected-badge">● Estás conectado</div>
         </div>
@@ -203,7 +181,6 @@ function ConnectedScreen({ onDisconnect }) {
           <Btn variant="ghost" onClick={onDisconnect}>Desconectar</Btn>
         </div>
       </div>
-      <PortalFooter />
     </div>
   );
 }
@@ -244,11 +221,9 @@ export default function CaptivePortal() {
 
   return (
     <ConexionCtx.Provider value={conexion}>
-      <div className="w7-stage">
-        <div className="w7-phone">
-          <StatusBar />
-          {body}
-        </div>
+      <div className="w7-portal">
+        <main className="w7-portal-body" key={screen}>{body}</main>
+        <PortalFooter />
       </div>
     </ConexionCtx.Provider>
   );

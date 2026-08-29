@@ -86,84 +86,66 @@ input:focus-visible, .w7-node-card:focus-visible {
   outline-offset: 2px;
 }
 
-/* ================= Captive portal (phone mock) ================= */
+/* ================= Portal cautivo (app a pantalla completa) ================= */
 
-.w7-stage {
-  min-height: calc(100vh - 60px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-  background: radial-gradient(circle at 30% 15%, #E6F3F8 0%, #F4F7FB 45%, #EDF1F7 100%);
-}
-.w7-phone {
-  width: 340px;
-  max-width: 100%;
-  border-radius: 40px;
-  background: #0B0F17;
-  padding: 12px;
-  box-shadow: 0 30px 60px -20px rgba(20,33,61,0.35), 0 4px 12px rgba(20,33,61,0.15);
-}
-.w7-screen {
-  width: 100%;
-  height: 620px;
-  background: #FFFFFF;
-  border-radius: 30px;
-  overflow: hidden;
+.w7-portal {
+  min-height: calc(100vh - 61px);
   display: flex;
   flex-direction: column;
-  position: relative;
+  background: linear-gradient(180deg, #EDF7FA 0%, #FFFFFF 300px);
 }
-.w7-statusbar {
-  height: 30px;
+.w7-portal-body {
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 22px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink);
-  position: relative;
+  flex-direction: column;
+  animation: w7enter 0.28s ease-out;
 }
-.w7-notch {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translateX(-50%);
-  width: 90px;
-  height: 20px;
-  background: #0B0F17;
-  border-radius: 0 0 14px 14px;
+@keyframes w7enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
 }
-.w7-statusbar-icons { font-size: 10px; letter-spacing: 1px; }
+@media (prefers-reduced-motion: reduce) {
+  .w7-portal-body { animation: none; }
+}
+
+/* Columna de lectura: full-bleed en mobile, centrada en pantallas grandes. */
+.w7-screen {
+  flex: 1;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+}
 
 .w7-screen-header {
-  height: 46px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 8px 0 4px;
+  gap: 12px;
+  padding: 18px 0 6px;
   font-family: 'Sora', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 17px;
   color: var(--navy);
-  border-bottom: 1px solid var(--panel);
 }
 .w7-back {
-  width: 28px; height: 28px;
-  border: none; background: var(--panel); border-radius: 50%;
-  font-size: 18px; color: var(--navy); cursor: pointer;
+  width: 34px; height: 34px;
+  border: 1px solid var(--line); background: #fff; border-radius: 50%;
+  font-size: 19px; color: var(--navy); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  line-height: 1;
+  line-height: 1; flex-shrink: 0;
+  transition: background 0.15s ease;
 }
+.w7-back:hover { background: var(--panel); }
 
 .w7-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 6px 22px 16px;
-  overflow-y: auto;
+  justify-content: center;
+  padding: 20px 0 28px;
 }
 
 .w7-brand-block { display: flex; flex-direction: column; align-items: center; }
@@ -236,12 +218,19 @@ input:focus-visible, .w7-node-card:focus-visible {
 .w7-panel-sub { font-size: 11.5px; color: #7A8699; margin-top: 2px; }
 
 .w7-footer {
-  height: 40px;
-  border-top: 1px solid var(--panel);
+  border-top: 1px solid var(--line);
+  background: #fff;
+  padding: 14px 24px;
+}
+/* El borde superior cruza todo el ancho, pero el contenido se alinea con
+   la columna de lectura: eso es lo que lo hace leer como app y no como caja. */
+.w7-footer-inner {
+  max-width: 480px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  gap: 16px;
 }
 .w7-link {
   background: none; border: none; cursor: pointer;
