@@ -1,29 +1,92 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { W7Logo } from "./Brand.jsx";
 import { BarrasSeñal, ChipConexion, AvisoUbicacion } from "./Conexion.jsx";
 import { useGeolocalizacion } from "../hooks/useGeolocalizacion.js";
 import { useConexion } from "../hooks/useConexion.js";
-import { buscarNodosCercanos, obtenerCuenta, obtenerHistorialConexiones, PAQUETES } from "../lib/demoBackend.js";
+import {
+  activarSuscripcion,
+  buscarNodosCercanos,
+  obtenerHistorialConexiones,
+  obtenerSuscripcion,
+  BILLETERAS,
+  PRECIO_MENSUAL_USD,
+} from "../lib/demoBackend.js";
 import { formatearDistancia } from "../lib/geo.js";
 
 // MapLibre pesa bastante: se carga recién cuando hace falta.
 const MapaRed = lazy(() => import("./MapaRed.jsx"));
 
 const RADIO_BUSQUEDA_M = 600;
+const PRECIO_TEXTO = `USD ${PRECIO_MENSUAL_USD.toFixed(2).replace(".", ",")}`;
+
+const INCLUYE = [
+  "Todos los nodos W-7 del país, sin límite de cuál usás",
+  "Cambiás de ciudad y seguís conectado con el mismo mes pago",
+  "Sin descuento por MB: el consumo no te resta saldo",
+];
+
+function ChipSuscripcion({ suscripcion, onActivar }) {
+  if (!suscripcion) {
+    return (
+      <div className="w7-plan-chip">
+        <span className="w7-plan-chip-label">Estado</span>
+        <span className="w7-plan-chip-value">—</span>
+      </div>
+    );
+  }
+
+  if (suscripcion.estado === "activa") {
+    return (
+      <div className="w7-plan-chip is-activa">
+        <span className="w7-plan-chip-label">Estado</span>
+        <span className="w7-plan-chip-value">● Usuario activo</span>
+        <span className="w7-plan-chip-note">vence el {suscripcion.vence}</span>
+      </div>
+    );
+  }
+
+  return (
+    <button className="w7-plan-chip is-inactiva" onClick={onActivar}>
+      <span className="w7-plan-chip-label">Usuario inactivo</span>
+      <span className="w7-plan-chip-value">Pagar {PRECIO_TEXTO} para activar</span>
+    </button>
+  );
+}
+
+function SelectorBilleteras({ elegida, onElegir, deshabilitado }) {
+  return (
+    <div className="w7-wallet-grid">
+      {BILLETERAS.map((b) => (
+        <button
+          key={b.id}
+          className={`w7-wallet ${elegida === b.id ? "is-selected" : ""}`}
+          onClick={() => onElegir(b.id)}
+          disabled={deshabilitado}
+        >
+          <span className="w7-wallet-logo" style={{ background: b.color }}>{b.sigla}</span>
+          <span className="w7-wallet-name">{b.nombre}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function ClientDashboard() {
   const geo = useGeolocalizacion();
   const conexion = useConexion();
 
-  const [cuenta, setCuenta] = useState(null);
+  const [suscripcion, setSuscripcion] = useState(null);
   const [nodos, setNodos] = useState([]);
   const [cargandoNodos, setCargandoNodos] = useState(true);
   const [seleccionado, setSeleccionado] = useState(null);
   const [historial, setHistorial] = useState([]);
+  const [billetera, setBilletera] = useState(BILLETERAS[0].id);
+  const [pagando, setPagando] = useState(false);
+  const refPlan = useRef(null);
 
   useEffect(() => {
     let activo = true;
-    obtenerCuenta().then((c) => activo && setCuenta(c));
+    obtenerSuscripcion().then((s) => activo && setSuscripcion(s));
     obtenerHistorialConexiones().then((h) => activo && setHistorial(h));
     return () => { activo = false; };
   }, []);
@@ -44,6 +107,23 @@ export default function ClientDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geo.coords?.lat?.toFixed(4), geo.coords?.lng?.toFixed(4)]);
 
+  const activa = suscripcion?.estado === "activa";
+  const nodoActual = nodos.find((n) => n.id === seleccionado) ?? null;
+
+  const irAlPlan = () => refPlan.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  // El pago deja registro de dónde se activó: nodo + coordenadas del momento.
+  const pagarMes = async () => {
+    setPagando(true);
+    const nueva = await activarSuscripcion({
+      billeteraId: billetera,
+      coords: geo.coords,
+      nodo: nodoActual,
+    });
+    setSuscripcion(nueva);
+    setPagando(false);
+  };
+
   const subtitulo = geo.esReal
     ? `Ubicación detectada · ${geo.coords.lat.toFixed(4)}, ${geo.coords.lng.toFixed(4)}`
     : "Ubicación de ejemplo";
@@ -60,12 +140,7 @@ export default function ClientDashboard() {
         </div>
         <div className="w7-header-aside">
           <ChipConexion conexion={conexion} detallado />
-          <div className="w7-balance-chip">
-            <span className="w7-balance-label">Saldo</span>
-            <span className="w7-balance-value">
-              {cuenta ? `USD ${cuenta.saldoUSD.toFixed(2)}` : "—"}
-            </span>
-          </div>
+          <ChipSuscripcion suscripcion={suscripcion} onActivar={irAlPlan} />
         </div>
       </header>
 
@@ -94,7 +169,7 @@ export default function ClientDashboard() {
                     <div className="w7-node-main">
                       <span className="w7-node-alias">{n.alias}</span>
                       <span className="w7-node-meta">
-                        {formatearDistancia(n.distancia)} · {n.precioTexto}
+                        {formatearDistancia(n.distancia)} · {activa ? "Incluido en tu mes" : "Requiere estado activo"}
                       </span>
                     </div>
                     <BarrasSeñal nivel={n.señal} />
@@ -105,10 +180,19 @@ export default function ClientDashboard() {
           <button
             className="w7-btn w7-btn-primary"
             style={{ width: "100%", marginTop: 14 }}
-            disabled={!seleccionado || !conexion.online}
+            disabled={!seleccionado || !conexion.online || !activa}
           >
-            {conexion.online ? "Conectarme al nodo seleccionado" : "Sin conexión"}
+            {!conexion.online
+              ? "Sin conexión"
+              : activa
+                ? "Conectarme al nodo seleccionado"
+                : `Activá tu mes por ${PRECIO_TEXTO}`}
           </button>
+          {!activa && suscripcion && (
+            <button className="w7-link" style={{ marginTop: 10 }} onClick={irAlPlan}>
+              Ver cómo activar
+            </button>
+          )}
         </div>
 
         <div className="w7-card w7-card-dark w7-card-mapa">
@@ -139,45 +223,123 @@ export default function ClientDashboard() {
         </div>
       </section>
 
-      <section className="w7-card">
-        <div className="w7-card-header">
-          <h2>Comprar datos</h2>
-          <span className="w7-card-sub">Se descuentan de tu saldo al conectarte</span>
+      <section className="w7-grid w7-grid-split" ref={refPlan}>
+        <div className="w7-card">
+          <div className="w7-card-header">
+            <h2>Tu acceso W-7</h2>
+            <span className="w7-card-sub">
+              {PRECIO_TEXTO} por mes · un solo pago para toda la red, en cualquier ciudad
+            </span>
+          </div>
+
+          {!suscripcion ? (
+            <div className="w7-skeleton w7-skeleton-node" />
+          ) : (
+            <>
+              <div className={`w7-plan-state ${activa ? "is-activa" : "is-inactiva"}`}>
+                <div>
+                  <div className="w7-plan-state-title">
+                    {activa ? "● Usuario activo" : "● Usuario inactivo"}
+                  </div>
+                  <div className="w7-plan-state-note">
+                    {activa
+                      ? `Vence el ${suscripcion.vence} · quedan ${suscripcion.diasRestantes} días`
+                      : "Activá el mes para entrar a cualquier nodo de la red"}
+                  </div>
+                </div>
+                <div className="w7-plan-price">
+                  {PRECIO_TEXTO}
+                  <span>/mes</span>
+                </div>
+              </div>
+
+              <ul className="w7-plan-benefits">
+                {INCLUYE.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+
+              {activa ? (
+                <>
+                  <div className="w7-plan-record">
+                    <span className="w7-plan-record-label">Registro de activación</span>
+                    <span className="w7-plan-record-value">
+                      {suscripcion.activacion.fecha} · {suscripcion.activacion.zona}
+                    </span>
+                    <span className="w7-plan-record-note">
+                      Nodo {suscripcion.activacion.nodo} · pago por {suscripcion.activacion.billetera} · guardado cifrado
+                    </span>
+                  </div>
+                  <button
+                    className="w7-btn w7-btn-secondary"
+                    style={{ width: "100%", marginTop: 12 }}
+                    onClick={() => setSuscripcion({ ...suscripcion, estado: "inactiva" })}
+                  >
+                    Simular vencimiento (demo)
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="w7-plan-subtitle">Pagá con tu billetera virtual</div>
+                  <SelectorBilleteras elegida={billetera} onElegir={setBilletera} deshabilitado={pagando} />
+                  <button
+                    className="w7-btn w7-btn-primary"
+                    style={{ width: "100%", marginTop: 14 }}
+                    onClick={pagarMes}
+                    disabled={pagando}
+                  >
+                    {pagando ? "Confirmando el pago…" : `Pagar ${PRECIO_TEXTO} y activarme`}
+                  </button>
+                  <p className="w7-plan-fineprint">
+                    El cobro lo procesa la billetera: W-7 no guarda datos de tarjeta ni de cuenta.
+                  </p>
+                </>
+              )}
+            </>
+          )}
         </div>
-        <div className="w7-pricing-row">
-          {PAQUETES.map((p) => (
-            <div key={p.id} className={`w7-pricing-card ${p.featured ? "is-featured" : ""}`}>
-              {p.featured && <span className="w7-pricing-tag">Más elegido</span>}
-              <div className="w7-pricing-name">{p.nombre}</div>
-              <div className="w7-pricing-price">{p.precio}</div>
-              <div className="w7-pricing-detail">{p.detalle}</div>
-              <button
-                className={`w7-btn ${p.featured ? "w7-btn-primary" : "w7-btn-secondary"}`}
-                style={{ width: "100%", marginTop: 12 }}
-              >
-                Comprar
-              </button>
-            </div>
-          ))}
+
+        <div className="w7-card w7-card-dark">
+          <div className="w7-card-header w7-card-header-dark">
+            <h2>Seguridad y privacidad</h2>
+            <span className="w7-card-sub w7-card-sub-dark">Qué se guarda y cómo</span>
+          </div>
+          <ul className="w7-sec-list">
+            <li>
+              <strong>Sesión cifrada.</strong> El tráfico entre tu equipo y el nodo va por WPA2/WPA3 y
+              sale por un túnel TLS: el host no ve lo que navegás.
+            </li>
+            <li>
+              <strong>Pago tokenizado.</strong> La billetera devuelve un token de la operación; W-7
+              nunca recibe ni almacena tus credenciales de pago.
+            </li>
+            <li>
+              <strong>Registro de activación cifrado.</strong> Guardamos dónde y en qué nodo se activó
+              cada mes (AES-256 en reposo) para auditoría de la red. No limita dónde te conectás.
+            </li>
+            <li>
+              <strong>Identidad mínima.</strong> Sólo el celular validado por OTP; sin datos de más.
+            </li>
+          </ul>
         </div>
       </section>
 
       <section className="w7-card">
         <div className="w7-card-header">
           <h2>Historial de conexiones</h2>
-          <span className="w7-card-sub">Últimas sesiones</span>
+          <span className="w7-card-sub">Últimas sesiones · todas dentro del mes pago</span>
         </div>
         <table className="w7-table">
           <thead>
-            <tr><th>Fecha</th><th>Nodo</th><th>Consumo</th><th>Costo</th></tr>
+            <tr><th>Fecha</th><th>Nodo</th><th>Zona</th><th>Consumo</th></tr>
           </thead>
           <tbody>
             {historial.map((h, i) => (
               <tr key={i}>
                 <td>{h.fecha}</td>
                 <td>{h.nodo}</td>
+                <td>{h.zona}</td>
                 <td>{h.mb} MB</td>
-                <td>{h.costo}</td>
               </tr>
             ))}
           </tbody>

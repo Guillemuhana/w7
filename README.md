@@ -61,10 +61,27 @@ El proyecto es una SPA de Vite: Vercel la detecta sola
 | Mapa y calles | **Real** (MapLibre GL + OpenFreeMap) |
 | Distancia a cada nodo | **Real** (haversine sobre tu posición) |
 | Estado de conexión y latencia | **Real** (sonda propia + Network Information API) |
-| Nodos, saldo, paquetes, historial, OTP | Simulados |
+| Nodos, suscripción, pago, historial, OTP | Simulados |
 
 Los nodos se ubican en relación a donde estés, así que la demo funciona en
 cualquier ciudad.
+
+## Modelo comercial
+
+El cliente no compra datos ni tiene saldo: paga **USD 3,50 por mes** y queda
+**activo** por 30 días. Con el estado activo entra a **cualquier nodo W-7 del
+país** — hoy en Viedma, mañana en Córdoba Capital — sin volver a pagar y sin
+descuento por MB. Si está inactivo, el panel sólo ofrece activar el mes.
+
+- El cobro se hace por **billeteras virtuales** (Mercado Pago, Ualá, MODO,
+  Naranja X, Personal Pay, Brubank, Binance Pay, USDT). W-7 no guarda datos de
+  tarjeta ni de cuenta: la billetera devuelve un token de la operación.
+- De cada alta se guarda un **registro de activación** (fecha, nodo y zona
+  desde donde se pagó). Es trazabilidad de la red, no un límite de cobertura;
+  en el backend ese registro va cifrado en reposo.
+
+Precio, duración y billeteras están en `src/lib/demoBackend.js`
+(`PRECIO_MENSUAL_USD`, `DIAS_SUSCRIPCION`, `BILLETERAS`).
 
 ## Conectar el backend (Supabase)
 

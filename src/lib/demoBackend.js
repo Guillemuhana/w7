@@ -35,19 +35,48 @@ export const MODO_DEMO = true;
 export const UBICACION_FALLBACK = { lat: -31.4201, lng: -64.1888 };
 
 /**
+ * Modelo comercial: una sola suscripción mensual. El usuario paga y queda
+ * activo por 30 días; con el estado activo entra a cualquier nodo W-7 del
+ * país, esté hoy en Viedma y mañana en Córdoba. No hay paquetes de datos ni
+ * saldo que se descuente: sólo "activo" o "inactivo".
+ */
+export const PRECIO_MENSUAL_USD = 3.5;
+export const DIAS_SUSCRIPCION = 30;
+
+/**
  * Nodos de ejemplo. Se ubican en relación a donde esté el usuario
  * (rumbo + distancia fijos) para que la demo funcione en cualquier ciudad
  * y las posiciones no salten entre renders.
  */
 const SEMILLA_NODOS = [
-  { id: "A1043", alias: "Centro Vecinal", rumbo: 38, metros: 120, señal: 5, precioTexto: "USD 0,60 / 500MB", host: "Familia Gómez", cobertura: 90 },
-  { id: "B2210", alias: "Plaza del Barrio", rumbo: 215, metros: 240, señal: 4, precioTexto: "USD 0,60 / 500MB", host: "Club Social", cobertura: 110 },
-  { id: "C0871", alias: "Almacén Don José", rumbo: 305, metros: 380, señal: 3, precioTexto: "USD 0,50 / 500MB", host: "Almacén Don José", cobertura: 70 },
-  { id: "D5566", alias: "Escuela N.º 12", rumbo: 128, metros: 520, señal: 2, precioTexto: "USD 0,50 / 500MB", host: "Cooperadora", cobertura: 120 },
+  { id: "A1043", alias: "Centro Vecinal", rumbo: 38, metros: 120, señal: 5, host: "Familia Gómez", cobertura: 90 },
+  { id: "B2210", alias: "Plaza del Barrio", rumbo: 215, metros: 240, señal: 4, host: "Club Social", cobertura: 110 },
+  { id: "C0871", alias: "Almacén Don José", rumbo: 305, metros: 380, señal: 3, host: "Almacén Don José", cobertura: 70 },
+  { id: "D5566", alias: "Escuela N.º 12", rumbo: 128, metros: 520, señal: 2, host: "Cooperadora", cobertura: 120 },
+];
+
+/** Billeteras virtuales habilitadas para cobrar la suscripción. */
+export const BILLETERAS = [
+  { id: "mercadopago", nombre: "Mercado Pago", sigla: "MP", color: "#00A6E0" },
+  { id: "uala", nombre: "Ualá", sigla: "U", color: "#F04E23" },
+  { id: "modo", nombre: "MODO", sigla: "M", color: "#1B1B3A" },
+  { id: "naranjax", nombre: "Naranja X", sigla: "NX", color: "#F25C05" },
+  { id: "personalpay", nombre: "Personal Pay", sigla: "PP", color: "#6A2C91" },
+  { id: "brubank", nombre: "Brubank", sigla: "B", color: "#7B3FF2" },
+  { id: "binance", nombre: "Binance Pay", sigla: "BP", color: "#F0B90B" },
+  { id: "usdt", nombre: "USDT (cripto)", sigla: "₮", color: "#26A17B" },
 ];
 
 /** Simula la latencia de una consulta al backend. */
 const demora = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const FORMATO_FECHA = new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short" });
+
+function sumarDias(fecha, dias) {
+  const d = new Date(fecha);
+  d.setDate(d.getDate() + dias);
+  return d;
+}
 
 export async function buscarNodosCercanos({ lat, lng, radioMetros = 600 }) {
   await demora(450);
@@ -60,22 +89,63 @@ export async function buscarNodosCercanos({ lat, lng, radioMetros = 600 }) {
     .sort((a, b) => a.distancia - b.distancia);
 }
 
-export async function obtenerCuenta() {
+/**
+ * Estado de la suscripción del usuario.
+ *
+ * `activacion` es el registro de dónde se activó el mes en curso: lo
+ * guardamos por trazabilidad (qué nodo y qué zona originó el alta), no para
+ * limitar el acceso. En el backend ese registro va cifrado.
+ */
+export async function obtenerSuscripcion() {
   await demora(300);
-  return { saldoUSD: 3.4, plan: "Prepago" };
+  const desde = sumarDias(new Date(), -4);
+  const vence = sumarDias(desde, DIAS_SUSCRIPCION);
+  return {
+    estado: "activa",
+    precioMensualUSD: PRECIO_MENSUAL_USD,
+    vence: FORMATO_FECHA.format(vence),
+    diasRestantes: Math.ceil((vence - new Date()) / 86400000),
+    activacion: {
+      fecha: FORMATO_FECHA.format(desde),
+      nodo: "Centro Vecinal",
+      zona: "Viedma, Río Negro",
+      coords: { lat: -40.8287, lng: -63.0214 },
+      billetera: "Mercado Pago",
+    },
+  };
 }
 
-export const PAQUETES = [
-  { id: "s", nombre: "500 MB", precio: "USD 0,60", detalle: "Ideal para mensajería y redes" },
-  { id: "m", nombre: "1 GB", precio: "USD 1,00", detalle: "Navegación + streaming liviano", featured: true },
-  { id: "l", nombre: "3 GB", precio: "USD 2,50", detalle: "Uso intensivo del día" },
-];
+/**
+ * Cobra el mes por la billetera elegida y deja al usuario activo.
+ * Devuelve la suscripción ya actualizada, con el registro de activación
+ * (nodo + coordenadas desde donde se pagó).
+ */
+export async function activarSuscripcion({ billeteraId, coords, nodo }) {
+  await demora(1200);
+  const billetera = BILLETERAS.find((b) => b.id === billeteraId);
+  const hoy = new Date();
+  const vence = sumarDias(hoy, DIAS_SUSCRIPCION);
+  return {
+    estado: "activa",
+    precioMensualUSD: PRECIO_MENSUAL_USD,
+    vence: FORMATO_FECHA.format(vence),
+    diasRestantes: DIAS_SUSCRIPCION,
+    activacion: {
+      fecha: FORMATO_FECHA.format(hoy),
+      nodo: nodo?.alias ?? "Sin nodo",
+      zona: coords ? `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` : "Zona no informada",
+      coords: coords ?? null,
+      billetera: billetera?.nombre ?? "Billetera virtual",
+    },
+  };
+}
 
+/** Historial de sesiones: sin costo por sesión, todo entra en el mes pago. */
 export async function obtenerHistorialConexiones() {
   await demora(380);
   return [
-    { fecha: "27 ago", nodo: "Centro Vecinal", mb: 420, costo: "USD 0,50" },
-    { fecha: "24 ago", nodo: "Plaza del Barrio", mb: 890, costo: "USD 1,00" },
-    { fecha: "19 ago", nodo: "Centro Vecinal", mb: 310, costo: "USD 0,40" },
+    { fecha: "27 ago", nodo: "Centro Vecinal", zona: "Viedma, Río Negro", mb: 420 },
+    { fecha: "24 ago", nodo: "Plaza del Barrio", zona: "Viedma, Río Negro", mb: 890 },
+    { fecha: "19 ago", nodo: "Escuela N.º 12", zona: "Córdoba Capital", mb: 310 },
   ];
 }
