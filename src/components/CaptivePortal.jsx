@@ -58,11 +58,37 @@ function Btn({ variant = "primary", children, ...props }) {
   );
 }
 
+function PaymentOptionsPanel() {
+  return (
+    <div className="w7-payment-panel">
+      <div className="w7-payment-header">
+        <span className="w7-payment-title">Mantenimiento en la red</span>
+        <button className="w7-payment-link">Otras formas de pago</button>
+      </div>
+
+      <button className="w7-pay-method w7-pay-method-paypal" type="button">
+        <span className="w7-pay-icon">P</span>
+        <span>Pagar con PayPal</span>
+      </button>
+
+      <div className="w7-price-row">
+        <div className="w7-price-amount">
+          <span className="w7-price-value">USD 3.50</span>
+          <span className="w7-price-caption">mantenimiento de la red</span>
+        </div>
+        <button className="w7-price-cta" type="button">Pagar con Mercado Pago</button>
+      </div>
+
+      <div className="w7-payment-footer">Otras formas de pago</div>
+    </div>
+  );
+}
+
 function WelcomeScreen({ go }) {
   return (
     <div className="w7-screen">
       <div className="w7-content">
-        <div className="w7-brand-block">
+        <div className="w7-brand-block w7-brand-block-welcome">
           <Wordmark size={132} pulsing />
         </div>
         <p className="w7-welcome-text">¡Bienvenido a la red solidaria W-7!</p>
@@ -71,6 +97,8 @@ function WelcomeScreen({ go }) {
           <Btn variant="secondary" onClick={() => go("whatsapp-phone")}>Conectarme con WhatsApp</Btn>
           <Btn variant="secondary" onClick={() => go("cell-phone")}>Validar con mi Celular</Btn>
         </div>
+
+        <PaymentOptionsPanel />
         <CommunityPanel />
       </div>
     </div>

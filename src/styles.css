@@ -166,6 +166,11 @@ input:focus-visible, .w7-node-card:focus-visible {
   .w7-logo.is-pulsing .w7-wave { animation: none; opacity: 1; }
 }
 
+.w7-brand-block-welcome {
+  margin-top: 8px;
+  margin-bottom: 10px;
+}
+
 .w7-welcome-text {
   text-align: center;
   font-size: 14.5px;
@@ -198,6 +203,112 @@ input:focus-visible, .w7-node-card:focus-visible {
 .w7-btn-primary { background: linear-gradient(135deg, var(--teal-light), var(--teal-dark)); color: #fff; }
 .w7-btn-secondary { background: var(--navy); color: #fff; }
 .w7-btn-ghost { background: var(--danger-bg); color: var(--danger); }
+
+.w7-payment-panel {
+  margin-top: 18px;
+  background: rgba(237, 247, 250, 0.7);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+}
+.w7-payment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.w7-payment-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.02em;
+}
+.w7-payment-link {
+  background: none;
+  border: none;
+  color: var(--teal-dark);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+.w7-pay-method {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.w7-pay-method-paypal {
+  background: linear-gradient(135deg, #1d4f9b 0%, #0f3d7a 100%);
+}
+.w7-pay-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.18);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+.w7-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 18px;
+}
+.w7-price-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.w7-price-value {
+  font-family: 'Sora', sans-serif;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--navy);
+}
+.w7-price-caption {
+  font-size: 10px;
+  color: #66799b;
+  text-transform: lowercase;
+}
+.w7-price-cta {
+  background: transparent;
+  border: none;
+  color: var(--navy);
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: right;
+  max-width: 120px;
+}
+.w7-payment-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5d6e8d;
+}
 
 .w7-panel {
   margin-top: 18px;
