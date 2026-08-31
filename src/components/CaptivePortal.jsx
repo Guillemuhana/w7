@@ -1,25 +1,46 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { W7Logo, Wordmark } from "./Brand.jsx";
+import { motion, useReducedMotion } from "framer-motion";
+import { W7Logo } from "./Brand.jsx";
 import { BarrasSeñal } from "./Conexion.jsx";
 import { useConexion } from "../hooks/useConexion.js";
 
 // La señal que muestra el portal es la conexión real del dispositivo.
 const ConexionCtx = createContext(null);
 
+// Entrada escalonada de la home: cada bloque sube con un resorte corto.
+const subir = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 260, damping: 26 } },
+};
+const escalonar = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.075, delayChildren: 0.04 } },
+};
+const entradaLogo = {
+  hidden: { opacity: 0, scale: 0.78 },
+  show: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 190, damping: 17 } },
+};
+
 function CommunityPanel() {
   return (
     <div className="w7-panel">
-      <div className="w7-panel-eyebrow">Panel de publicidad y comunidad W-7</div>
+      <div className="w7-panel-eyebrow">Anuncios y comunidad</div>
       <div className="w7-panel-body">
-        <svg width="58" height="58" viewBox="0 0 58 58" style={{ borderRadius: 12, flexShrink: 0 }}>
-          <rect width="58" height="58" rx="12" fill="#17A5AE" />
-          <circle cx="20" cy="24" r="7" fill="#CDEFF2" />
-          <circle cx="34" cy="22" r="9" fill="#8FDCE2" />
-          <path d="M8 46c2-9 9-13 21-13s19 4 21 13" fill="#0E8791" />
+        <svg width="66" height="66" viewBox="0 0 66 66" className="w7-panel-thumb" aria-hidden="true">
+          <rect width="66" height="66" rx="13" fill="#9CC7E8" />
+          <rect y="36" width="66" height="30" fill="#7A5A40" />
+          <circle cx="17" cy="21" r="9" fill="#4E9A51" />
+          <circle cx="34" cy="16" r="11" fill="#3F8944" />
+          <circle cx="50" cy="23" r="8" fill="#4E9A51" />
+          <path d="M0 34h66v6H0z" fill="#5E4534" />
+          <path d="M13 64V46M33 64V44M53 64V47" stroke="#8FD08B" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="13" cy="46" r="4.5" fill="#A8E39F" />
+          <circle cx="33" cy="44" r="5.5" fill="#A8E39F" />
+          <circle cx="53" cy="47" r="4.5" fill="#A8E39F" />
         </svg>
         <div>
-          <div className="w7-panel-title">Visitá nuestra nueva plaza comunitaria</div>
-          <div className="w7-panel-sub">Evento W-7 · este fin de semana</div>
+          <div className="w7-panel-title">Nuevo proyecto de huerta comunitaria</div>
+          <div className="w7-panel-sub">¡Sumate! Sábado 10 am en la Plaza del Barrio</div>
         </div>
       </div>
     </div>
@@ -52,20 +73,21 @@ function ScreenHeader({ title, onBack }) {
 
 function Btn({ variant = "primary", children, ...props }) {
   return (
-    <button className={`w7-btn w7-btn-${variant}`} {...props}>
+    <motion.button
+      className={`w7-btn w7-btn-${variant}`}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.975 }}
+      transition={{ type: "spring", stiffness: 420, damping: 28 }}
+      {...props}
+    >
       {children}
-    </button>
+    </motion.button>
   );
 }
 
 function PaymentOptionsPanel() {
   return (
     <div className="w7-payment-panel">
-      <div className="w7-payment-header">
-        <span className="w7-payment-title">Mantenimiento en la red</span>
-        <button className="w7-payment-link">Otras formas de pago</button>
-      </div>
-
       <button className="w7-pay-method w7-pay-method-paypal" type="button">
         <span className="w7-pay-icon">P</span>
         <span>Pagar con PayPal</span>
@@ -74,33 +96,60 @@ function PaymentOptionsPanel() {
       <div className="w7-price-row">
         <div className="w7-price-amount">
           <span className="w7-price-value">USD 3.50</span>
-          <span className="w7-price-caption">mantenimiento de la red</span>
+          <span className="w7-price-caption">otras formas de pago</span>
         </div>
-        <button className="w7-price-cta" type="button">Pagar con Mercado Pago</button>
+        <button className="w7-price-cta" type="button">Pagar con<br />Mercado Pago</button>
       </div>
-
-      <div className="w7-payment-footer">Otras formas de pago</div>
     </div>
+  );
+}
+
+/** Logo grande arriba de todo: aura que respira + flotación suave. */
+function BrandHero() {
+  const quieto = useReducedMotion();
+  return (
+    <motion.div className="w7-hero" variants={entradaLogo}>
+      <motion.span
+        className="w7-hero-aura"
+        aria-hidden="true"
+        animate={quieto ? undefined : { scale: [1, 1.16, 1], opacity: [0.4, 0.75, 0.4] }}
+        transition={{ duration: 4.6, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="w7-hero-mark"
+        animate={quieto ? undefined : { y: [0, -8, 0] }}
+        transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <W7Logo size={150} pulsing />
+      </motion.div>
+    </motion.div>
   );
 }
 
 function WelcomeScreen({ go }) {
   return (
-    <div className="w7-screen">
-      <div className="w7-content">
-        <div className="w7-brand-block w7-brand-block-welcome">
-          <Wordmark size={132} pulsing />
-        </div>
-        <p className="w7-welcome-text">¡Bienvenido a la red solidaria W-7!</p>
+    <div className="w7-screen w7-screen-welcome">
+      <motion.div
+        className="w7-content w7-content-welcome"
+        variants={escalonar}
+        initial="hidden"
+        animate="show"
+      >
+        <BrandHero />
+
+        <motion.p className="w7-welcome-text" variants={subir}>
+          ¡Bienvenido a la red solidaria W-7!
+        </motion.p>
+
         <div className="w7-btn-stack">
-          <Btn variant="primary" onClick={() => go("connecting")}>Conectarme a Internet</Btn>
-          <Btn variant="secondary" onClick={() => go("whatsapp-phone")}>Conectarme con WhatsApp</Btn>
-          <Btn variant="secondary" onClick={() => go("cell-phone")}>Validar con mi Celular</Btn>
+          <Btn variant="primary" variants={subir} onClick={() => go("connecting")}>Conectarme a Internet</Btn>
+          <Btn variant="secondary" variants={subir} onClick={() => go("whatsapp-phone")}>Conectarme con WhatsApp</Btn>
+          <Btn variant="secondary" variants={subir} onClick={() => go("cell-phone")}>Validar con mi Celular</Btn>
         </div>
 
-        <PaymentOptionsPanel />
-        <CommunityPanel />
-      </div>
+        <motion.div variants={subir}><PaymentOptionsPanel /></motion.div>
+        <motion.div variants={subir}><CommunityPanel /></motion.div>
+      </motion.div>
     </div>
   );
 }

@@ -123,11 +123,6 @@ export default function HostDashboard() {
           <div className="w7-status-value">USD {earned}</div>
           <div className="w7-dcard-note">{HISTORY.filter(h => h.estado === "Pagado").length} pagos recibidos</div>
         </StatCard>
-
-        <StatCard label="Referidos">
-          <div className="w7-status-value">2 vecinos</div>
-          <div className="w7-dcard-note">+USD 5 por cada uno activo</div>
-        </StatCard>
       </section>
 
       <section className="w7-grid w7-grid-split">
