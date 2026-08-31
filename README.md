@@ -99,3 +99,10 @@ Cuando llegue ese momento harán falta dos variables de entorno en Vercel:
 - La geolocalización sólo funciona en HTTPS o `localhost`; en Vercel está
   cubierto. Si el usuario no da permiso, la demo cae en una zona de ejemplo.
 - El mapa no necesita API key: OpenFreeMap es gratuito y sin límite de uso.
+
+## Licencia y propiedad intelectual
+
+Software **propietario**. © 2026 W-7 Social Network — Todos los derechos
+reservados. Este repositorio no es código abierto: no se permite copiar,
+modificar, redistribuir ni reutilizar el código, el diseño ni la identidad
+visual sin autorización previa y por escrito. Ver [LICENSE](LICENSE).
