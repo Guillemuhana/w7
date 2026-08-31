@@ -26,18 +26,17 @@ function CommunityPanel() {
     <div className="w7-panel">
       <div className="w7-panel-eyebrow">Anuncios y comunidad</div>
       <div className="w7-panel-body">
-        <svg width="66" height="66" viewBox="0 0 66 66" className="w7-panel-thumb" aria-hidden="true">
-          <rect width="66" height="66" rx="13" fill="#9CC7E8" />
-          <rect y="36" width="66" height="30" fill="#7A5A40" />
-          <circle cx="17" cy="21" r="9" fill="#4E9A51" />
-          <circle cx="34" cy="16" r="11" fill="#3F8944" />
-          <circle cx="50" cy="23" r="8" fill="#4E9A51" />
-          <path d="M0 34h66v6H0z" fill="#5E4534" />
-          <path d="M13 64V46M33 64V44M53 64V47" stroke="#8FD08B" strokeWidth="3" strokeLinecap="round" />
-          <circle cx="13" cy="46" r="4.5" fill="#A8E39F" />
-          <circle cx="33" cy="44" r="5.5" fill="#A8E39F" />
-          <circle cx="53" cy="47" r="4.5" fill="#A8E39F" />
-        </svg>
+        {/* Servida desde el propio portal: antes de conectarse el dispositivo
+            no tiene salida a internet y una imagen externa no cargaria. */}
+        <img
+          className="w7-panel-thumb"
+          src="/huerta-comunitaria.jpg"
+          width="66"
+          height="66"
+          loading="lazy"
+          decoding="async"
+          alt="Vecinos trabajando en la huerta comunitaria"
+        />
         <div>
           <div className="w7-panel-title">Nuevo proyecto de huerta comunitaria</div>
           <div className="w7-panel-sub">¡Sumate! Sábado 10 am en la Plaza del Barrio</div>
