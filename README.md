@@ -106,3 +106,17 @@ Software **propietario**. © 2026 W-7 Social Network — Todos los derechos
 reservados. Este repositorio no es código abierto: no se permite copiar,
 modificar, redistribuir ni reutilizar el código, el diseño ni la identidad
 visual sin autorización previa y por escrito. Ver [LICENSE](LICENSE).
+
+## Marcas de terceros
+
+Los logos de PayPal y Mercado Pago que aparecen en el panel de pago son
+versiones **dibujadas a mano en SVG**, no los archivos oficiales (el CDN de
+Mercado Pago responde 403 a la descarga directa). Sirven para la demo, pero
+antes de producción hay que reemplazarlos por los assets oficiales de cada
+marca y respetar sus guías de uso:
+
+- Mercado Pago: https://www.mercadopago.com.ar/ayuda/marca
+- PayPal: https://www.paypal.com/us/webapps/mpp/logo-center
+
+Lo mismo aplica a `public/huerta-comunitaria.jpg`, que es una foto de terceros
+usada de forma provisoria.

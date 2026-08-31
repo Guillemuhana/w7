@@ -84,6 +84,29 @@ function Btn({ variant = "primary", children, ...props }) {
   );
 }
 
+/**
+ * Isotipo de Mercado Pago: el apreton de manos sobre el celeste de marca.
+ * Es una version dibujada a mano; ver nota de marca en el README.
+ */
+function MercadoPagoIcon() {
+  return (
+    <svg viewBox="0 0 48 48" className="w7-mp-icon" aria-hidden="true">
+      <rect width="48" height="48" rx="13" fill="#fff" />
+      <g
+        fill="#009EE3"
+        stroke="#009EE3"
+        strokeWidth="3.2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      >
+        <path d="M7 21.6 L17.6 18.8 L24 22.7 L13.9 26.3 Z" />
+        <path d="M41 21.6 L30.4 18.8 L24 22.7 L34.1 26.3 Z" />
+      </g>
+      <ellipse cx="24" cy="24.2" rx="7.2" ry="4.5" fill="#009EE3" transform="rotate(-4 24 24.2)" />
+    </svg>
+  );
+}
+
 function PaymentOptionsPanel() {
   return (
     <div className="w7-payment-panel">
@@ -97,7 +120,19 @@ function PaymentOptionsPanel() {
           <span className="w7-price-value">USD 3.50</span>
           <span className="w7-price-caption">otras formas de pago</span>
         </div>
-        <button className="w7-price-cta" type="button">Pagar con<br />Mercado Pago</button>
+        <motion.button
+          className="w7-price-cta"
+          type="button"
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 420, damping: 28 }}
+        >
+          <MercadoPagoIcon />
+          <span className="w7-price-cta-text">
+            <span className="w7-price-cta-lead">Pagar con</span>
+            <span className="w7-price-cta-brand">Mercado Pago</span>
+          </span>
+        </motion.button>
       </div>
     </div>
   );

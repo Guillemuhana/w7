@@ -279,7 +279,7 @@ input:focus-visible, .w7-node-card:focus-visible {
 .w7-price-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   gap: 10px;
   padding-top: 14px;
 }
@@ -300,17 +300,49 @@ input:focus-visible, .w7-node-card:focus-visible {
   color: #66799b;
   text-transform: lowercase;
 }
+/* Boton de Mercado Pago con el celeste de marca, al mismo peso visual que
+   el de PayPal para que las dos formas de pago se lean como pares. */
 .w7-price-cta {
-  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #009EE3;
   border: none;
-  color: var(--navy);
+  border-radius: 12px;
+  padding: 9px 14px 9px 11px;
+  color: #fff;
   font-family: 'Sora', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 1.2;
   cursor: pointer;
-  text-align: right;
-  max-width: 110px;
+  text-align: left;
+  min-height: 48px;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(0, 158, 227, 0.32);
+  transition: box-shadow 0.18s ease;
+}
+.w7-price-cta:hover { box-shadow: 0 12px 22px rgba(0, 158, 227, 0.42); }
+.w7-mp-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+.w7-price-cta-text { display: flex; flex-direction: column; line-height: 1.15; }
+.w7-price-cta-lead {
+  font-size: 10.5px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+.w7-price-cta-brand {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* En pantallas angostas el precio y el boton comparten poco ancho. */
+@media (max-width: 370px) {
+  .w7-price-value { font-size: 24px; }
+  .w7-price-cta { padding: 9px 11px 9px 9px; gap: 7px; }
+  .w7-price-cta-brand { font-size: 13px; }
+  .w7-mp-icon { width: 23px; height: 23px; }
 }
 
 .w7-panel {
