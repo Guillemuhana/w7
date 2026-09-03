@@ -31,6 +31,9 @@ import { desplazar, distanciaEnMetros } from "./geo.js";
 
 export const MODO_DEMO = true;
 
+/** Base de las Edge Functions. Sin ella, todo el archivo responde simulado. */
+const API_URL = import.meta.env?.VITE_API_URL ?? null;
+
 /** Ubicación de respaldo si el navegador no da permiso: centro de Córdoba. */
 export const UBICACION_FALLBACK = { lat: -31.4201, lng: -64.1888 };
 
@@ -148,4 +151,43 @@ export async function obtenerHistorialConexiones() {
     { fecha: "24 ago", nodo: "Plaza del Barrio", zona: "Viedma, Río Negro", mb: 890 },
     { fecha: "19 ago", nodo: "Escuela N.º 12", zona: "Córdoba Capital", mb: 310 },
   ];
+}
+
+/**
+ * Pide a W-7 que habilite este dispositivo en el nodo donde está parado.
+ *
+ * Es el paso 6 del handshake (ver `docs/arquitectura-red.md`): el portal manda
+ * la MAC, el nodo y el `hid` del router, la API verifica que la suscripción
+ * esté activa y devuelve un **ticket firmado con HMAC** usando la clave de ese
+ * nodo. Con ese ticket el navegador va a `urlDeAutorizacion()` y openNDS abre
+ * la puerta. El ticket vive pocos minutos: no sirve para reusar en otro nodo.
+ *
+ * Ésta es la única función que ya habla con el backend real: si está
+ * definida `VITE_API_URL` pega contra las Edge Functions de `api/`, y si no
+ * simula la respuesta para que la demo siga andando sin nodo ni backend.
+ */
+export async function autorizarDispositivo({ sesion, metodo = "suscripcion" }) {
+  if (API_URL) {
+    const r = await fetch(`${API_URL}/autorizar`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        nodo: sesion.nodo,
+        mac: sesion.mac,
+        ip: sesion.ip,
+        hid: sesion.token,
+        metodo,
+      }),
+    });
+    return r.json();
+  }
+
+  await demora(900);
+  return {
+    ok: true,
+    metodo,
+    tok: `demo-${Date.now().toString(36)}`,
+    custom: null,
+    minutosSesion: 120,
+  };
 }

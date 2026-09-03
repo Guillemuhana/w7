@@ -1,0 +1,8 @@
+# Vercel sólo publica la SPA. Estas carpetas son de otras piezas del sistema:
+#   api/   -> Edge Functions de Supabase (Deno), se despliegan con supabase CLI
+#   nodo/  -> scripts que van adentro del router del host
+# Además, sin esto Vercel tomaría api/ como serverless functions suyas y el
+# build fallaría al no poder resolver los imports de Deno.
+api/
+nodo/
+docs/

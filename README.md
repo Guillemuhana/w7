@@ -32,6 +32,10 @@ src/
 index.html
 package.json
 vite.config.js
+
+api/    -> Edge Functions y esquema de la base (ver api/README.md)
+nodo/   -> lo que se instala en el router del host (ver nodo/README.md)
+docs/   -> arquitectura de red
 ```
 
 ## Marca
@@ -57,6 +61,7 @@ El proyecto es una SPA de Vite: Vercel la detecta sola
 
 | | Estado |
 |---|---|
+| Autorización del dispositivo en el nodo | **Real** (API + openNDS/binauth, ver [api/](api/README.md) y [nodo/](nodo/README.md)) |
 | Geolocalización del dispositivo | **Real** (Geolocation API, con permiso) |
 | Mapa y calles | **Real** (MapLibre GL + OpenFreeMap) |
 | Distancia a cada nodo | **Real** (haversine sobre tu posición) |
@@ -82,6 +87,32 @@ descuento por MB. Si está inactivo, el panel sólo ofrece activar el mes.
 
 Precio, duración y billeteras están en `src/lib/demoBackend.js`
 (`PRECIO_MENSUAL_USD`, `DIAS_SUSCRIPCION`, `BILLETERAS`).
+
+## Cómo se conecta el router con el dispositivo
+
+El portal no conecta a nadie: el que abre la puerta es el router del nodo
+(OpenWrt + openNDS). El celular ya está asociado al WiFi y con IP, pero en
+estado `preauth`; el portal le pide a W-7 un ticket firmado para esa MAC y se
+lo entrega al router, que recién ahí lo deja salir.
+
+- El handshake completo, el walled garden, la detección de portal cautivo y el
+  camino a RADIUS están en [docs/arquitectura-red.md](docs/arquitectura-red.md).
+- Los parámetros que manda el router se leen en `src/lib/router.js`.
+- El pedido de autorización es `autorizarDispositivo()` en
+  `src/lib/demoBackend.js`: si está `VITE_API_URL` pega contra la API real,
+  y si no, simula.
+- La API que emite la autorización está en [api/](api/README.md).
+- Lo que va en el router del host, en [nodo/](nodo/README.md).
+
+Para probar el flujo real sin router, abrí la demo con los parámetros que
+agregaría openNDS:
+
+```
+http://localhost:5173/?clientmac=AA:BB:CC:DD:EE:FF&clientip=10.7.0.53&gatewayname=A1043&gatewayaddress=10.7.0.1&hid=demo123&redir=http://example.com
+```
+
+Con esos parámetros el portal intenta el redirect final al router; sin ellos
+(el caso de Vercel) se queda en la pantalla de conectado.
 
 ## Conectar el backend (Supabase)
 

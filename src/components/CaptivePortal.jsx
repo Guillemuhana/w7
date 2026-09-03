@@ -3,6 +3,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { W7Logo } from "./Brand.jsx";
 import { BarrasSeñal } from "./Conexion.jsx";
 import { useConexion } from "../hooks/useConexion.js";
+import { autorizarDispositivo } from "../lib/demoBackend.js";
+import { leerSesionRouter, macAbreviada, urlDeAutorizacion } from "../lib/router.js";
 
 // La señal que muestra el portal es la conexión real del dispositivo.
 const ConexionCtx = createContext(null);
@@ -245,18 +247,72 @@ function OtpScreen({ title, phone, onBack, onVerified }) {
   );
 }
 
-function ConnectingScreen({ onDone }) {
+/**
+ * Qué le decimos al visitante cuando la API dice que no. El código `motivo`
+ * es estable; el texto vive acá, en el único lugar que habla castellano.
+ */
+const TEXTO_MOTIVO = {
+  sin_suscripcion: "Tu mes de acceso venció. Activalo y volvés a entrar en cualquier nodo.",
+  dispositivo_no_registrado: "Este dispositivo todavía no está asociado a una cuenta W-7.",
+  nodo_inactivo: "Este nodo está fuera de servicio por ahora.",
+  nodo_desconocido: "No reconocemos este nodo. Avisale al host.",
+};
+
+/**
+ * Acá pasa el handshake con el router (ver `docs/arquitectura-red.md`):
+ * le pedimos a W-7 un ticket firmado para esta MAC y este nodo, y después se
+ * lo entregamos al router, que es el que realmente abre la puerta.
+ * Sin router del otro lado (la demo, `npm run dev`) el paso final se omite.
+ */
+function ConnectingScreen({ sesion, onDone, onError }) {
   const conexion = useContext(ConexionCtx);
+  const [paso, setPaso] = useState("autorizando");
+  const lanzado = useRef(false);
+
   useEffect(() => {
-    const t = setTimeout(onDone, 1400);
-    return () => clearTimeout(t);
-  }, [onDone]);
+    if (lanzado.current) return; // una sola autorización por visita
+    lanzado.current = true;
+    let vivo = true;
+
+    (async () => {
+      try {
+        const permiso = await autorizarDispositivo({ sesion });
+        if (!vivo) return;
+        if (!permiso.ok) {
+          onError(TEXTO_MOTIVO[permiso.motivo] ?? "W-7 no autorizó este dispositivo.");
+          return;
+        }
+        if (sesion.presente) {
+          // El router valida la firma del ticket y nos manda a `destino`.
+          setPaso("abriendo");
+          window.location.replace(
+            urlDeAutorizacion({
+              gateway: sesion.gateway,
+              tok: permiso.tok,
+              custom: permiso.custom,
+              destino: sesion.destino,
+            })
+          );
+          return;
+        }
+        onDone();
+      } catch {
+        if (vivo) onError("No pudimos hablar con el nodo. Probá de nuevo.");
+      }
+    })();
+
+    return () => { vivo = false; };
+  }, [sesion, onDone, onError]);
+
   return (
     <div className="w7-screen">
       <div className="w7-content" style={{ alignItems: "center" }}>
         <W7Logo pulsing size={64} />
-        <p className="w7-connecting-text">Conectando a la red W-7…</p>
+        <p className="w7-connecting-text">
+          {paso === "abriendo" ? "Habilitando tu dispositivo…" : "Conectando a la red W-7…"}
+        </p>
         <div className="w7-loadbar"><div className="w7-loadbar-fill" /></div>
+        <p className="w7-connecting-meta">Nodo {sesion.nodo} · {macAbreviada(sesion.mac)}</p>
         <p className="w7-connecting-meta">
           {conexion.latenciaMs != null
             ? `Latencia medida: ${conexion.latenciaMs} ms · ${conexion.calidad.etiqueta}`
@@ -267,7 +323,22 @@ function ConnectingScreen({ onDone }) {
   );
 }
 
-function ConnectedScreen({ onDisconnect }) {
+function ErrorScreen({ mensaje, onRetry }) {
+  return (
+    <div className="w7-screen">
+      <div className="w7-content" style={{ alignItems: "center" }}>
+        <W7Logo size={56} />
+        <p className="w7-connecting-text">No se pudo conectar</p>
+        <p className="w7-connecting-meta">{mensaje}</p>
+        <div className="w7-btn-stack" style={{ marginTop: "auto" }}>
+          <Btn variant="primary" onClick={onRetry}>Reintentar</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConnectedScreen({ sesion, onDisconnect }) {
   return (
     <div className="w7-screen">
       <div className="w7-content">
@@ -275,6 +346,7 @@ function ConnectedScreen({ onDisconnect }) {
           <W7Logo size={60} />
           <div style={{ height: 10 }} />
           <div className="w7-connected-badge">● Estás conectado</div>
+          <div className="w7-connecting-meta">Nodo {sesion.nodo} · {sesion.ip}</div>
         </div>
         <div className="w7-stats-card">
           <div className="w7-stat">
@@ -298,8 +370,11 @@ function ConnectedScreen({ onDisconnect }) {
 
 export default function CaptivePortal() {
   const conexion = useConexion();
+  // Los parámetros que agregó el router al redirigirnos: se leen una sola vez.
+  const [sesion] = useState(leerSesionRouter);
   const [screen, setScreen] = useState("welcome");
   const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
   const go = (next) => setScreen(next);
 
   let body;
@@ -321,10 +396,19 @@ export default function CaptivePortal() {
       body = <OtpScreen title="Validar Celular" phone={phone} onBack={() => go("cell-phone")} onVerified={() => go("connecting")} />;
       break;
     case "connecting":
-      body = <ConnectingScreen onDone={() => go("connected")} />;
+      body = (
+        <ConnectingScreen
+          sesion={sesion}
+          onDone={() => go("connected")}
+          onError={(m) => { setError(m); go("error"); }}
+        />
+      );
       break;
     case "connected":
-      body = <ConnectedScreen onDisconnect={() => go("welcome")} />;
+      body = <ConnectedScreen sesion={sesion} onDisconnect={() => go("welcome")} />;
+      break;
+    case "error":
+      body = <ErrorScreen mensaje={error} onRetry={() => go("welcome")} />;
       break;
     default:
       body = <WelcomeScreen go={go} />;

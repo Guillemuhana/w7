@@ -1,0 +1,4 @@
+# Los scripts del nodo corren en OpenWrt (BusyBox sh). Con finales de línea
+# de Windows el shebang queda como "#!/bin/sh\r" y el router responde
+# "not found": tienen que quedar en LF sí o sí, en el repo y en la copia local.
+*.sh text eol=lf
